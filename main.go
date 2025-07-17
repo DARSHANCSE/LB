@@ -1,13 +1,16 @@
-
-
 package main
 
 import (
+	"loadbalancer/loadbalancer"
 	"loadbalancer/servers"
+	"sync"
 )
 
 
 func main (){
-
-	servers.RunServer(5)
+	var wg sync.WaitGroup
+	wg.Add(2)	
+	go servers.RunServer(5,&wg)
+	go loadbalancer.MakeLoadBalancer(5,&wg)
+	wg.Wait()
 }

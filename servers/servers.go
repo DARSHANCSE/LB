@@ -34,7 +34,8 @@ func (s *ServerList) pop() int {
 	return port
 }
 
-func RunServer(amount int) {
+func RunServer(amount int,wt *sync.WaitGroup) {
+	defer wt.Done()
 	var myserverlist ServerList
 	myserverlist.populate(amount)
 
@@ -49,7 +50,7 @@ func RunServer(amount int) {
 }
 
 func makeServer(sl *ServerList, wg *sync.WaitGroup) {
-	
+	defer wg.Done()
 	port := sl.pop()  
 
 	mux := http.NewServeMux()
@@ -64,7 +65,6 @@ func makeServer(sl *ServerList, wg *sync.WaitGroup) {
 	}
 	
 	fmt.Printf("Starting server on port 808%d\n", port)
-	defer wg.Done()
 	if err := server.ListenAndServe(); err != nil {
 		log.Printf("Server %d failed: %v", port, err)
 	}
