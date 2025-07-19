@@ -44,19 +44,44 @@ func MakeLoadBalancer (amount int , wt *sync.WaitGroup ){
 	for i:=0;i<amount;i++{
 	ep.List=append(ep.List, createurl(baseURL,i))
 	}
-	router.HandleFunc("/loadbalancer",makeRequest(&lb,&ep))
+	router.HandleFunc("/",makeRequest(&lb,&ep))
+	router.HandleFunc("/health", makeRequest(&lb,&ep))
+	router.HandleFunc("/disable", makeRequest(&lb,&ep))
 	log.Fatal(server.ListenAndServe())
 }
 
-func makeRequest(lb *loadbalancer,ep *Endpoints) func (w http.ResponseWriter,r *http.Request){
+func makeRequest(lb *loadbalancer, ep *Endpoints) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ind=(ind+1)%len(ep.List)
-		lb.RevProxy = *httputil.NewSingleHostReverseProxy(ep.List[ind])
-		lb.RevProxy.ServeHTTP(w,r)
-		fmt.Printf("testdone at port :808%d\n",ind)
+		start := ind
+		ind = (ind + 1) % len(ep.List)
+		for {
+			target := ep.List[ind]
+			resp, err := http.Get(target.String() + "/health")
+			if err == nil && resp.StatusCode == http.StatusOK {
+				resp.Body.Close()
+				break
+			}
+			ind = (ind + 1) % len(ep.List)
+			if ind == start {
+				http.Error(w, "No healthy backend servers", http.StatusServiceUnavailable)
+				return
+			}
+		}
 
+		director := func(req *http.Request) {
+			req.URL.Scheme = ep.List[ind].Scheme
+			req.URL.Host = ep.List[ind].Host
+			req.URL.Path = r.URL.Path // Keep original path
+			req.URL.RawQuery = r.URL.RawQuery
+			req.Host = ep.List[ind].Host
+		}
+
+		lb.RevProxy = httputil.ReverseProxy{Director: director}
+		lb.RevProxy.ServeHTTP(w, r)
+		fmt.Printf("Forwarded to: %s%s\n", ep.List[ind].Host, r.URL.Path)
 	}
 }
+
 
 
 func createurl (baseURL string , ind int)*url.URL{
