@@ -53,7 +53,7 @@ func makeRequest(lb *loadbalancer,ep *Endpoints) func (w http.ResponseWriter,r *
 		ind=(ind+1)%len(ep.List)
 		lb.RevProxy = *httputil.NewSingleHostReverseProxy(ep.List[ind])
 		lb.RevProxy.ServeHTTP(w,r)
-		fmt.Printf("testdone at port :808%d",ind)
+		fmt.Printf("testdone at port :808%d\n",ind)
 
 	}
 }
