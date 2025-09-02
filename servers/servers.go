@@ -129,16 +129,16 @@ func makeServer(sl *ServerList, wg *sync.WaitGroup) {
 
 
 
-func (s *ServerList) pop(port int) *server {
-	for i:=0;i<len(s.servers);i++{
-		if s.servers[i].port==port{
-			popped := s.servers[i]
-			s.mu.Lock()
-			s.servers=append(s.servers[:i],s.servers[i+1:]...)
-			s.mu.Unlock()
-			return &popped
-		}
-	}
-	return nil
-}
+// func (s *ServerList) pop(port int) *server {
+// 	for i:=0;i<len(s.servers);i++{
+// 		if s.servers[i].port==port{
+// 			popped := s.servers[i]
+// 			s.mu.Lock()
+// 			s.servers=append(s.servers[:i],s.servers[i+1:]...)
+// 			s.mu.Unlock()
+// 			return &popped
+// 		}
+// 	}
+// 	return nil
+// }
 

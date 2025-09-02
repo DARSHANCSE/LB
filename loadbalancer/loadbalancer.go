@@ -31,7 +31,7 @@ func MakeLoadBalancer (amount int , wt *sync.WaitGroup ){
 	defer wt.Done()
 
 	var lb loadbalancer
-	var ep Endpoints
+var ep Endpoints
 
 
 	router :=http.NewServeMux()
